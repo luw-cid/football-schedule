@@ -75,6 +75,185 @@ FootballScheduler/
 └── FootballScheduler.sln   # Solution file
 ```
 
+## 🎨 Design Patterns Được Sử Dụng
+
+Ứng dụng áp dụng nhiều design pattern hiện đại để đảm bảo code sạch, dễ bảo trì và mở rộng:
+
+### 1. **N-Tier Architecture Pattern**
+- Tách biệt rõ ràng giữa các lớp (GUI, BUS, DAL, DTO)
+- Giảm sự phụ thuộc giữa các thành phần
+- Dễ dàng kiểm thử (testing) từng lớp
+
+**Ví dụ:**
+```csharp
+// GUI gọi BUS
+LeagueBUS bus = new LeagueBUS();
+List<LeagueDTO> leagues = bus.GetAllLeagues();
+
+// BUS gọi DAL
+public List<LeagueDTO> GetAllLeagues()
+{
+    LeagueDAL dal = new LeagueDAL();
+    return dal.GetAllLeagues();
+}
+```
+
+### 2. **Factory Pattern** 🏭
+- **Vị trí**: `GUI/Cruds/CrudFactory.cs`
+- Tạo các object CRUD phù hợp dựa trên kiểu dữ liệu
+- Giảm sự phụ thuộc trực tiếp vào các class cụ thể
+
+**Ví dụ:**
+```csharp
+public static class CrudFactory
+{
+    public static ICrud CreateCrud(string type, DataGridView dgv)
+    {
+        switch (type)
+        {
+            case "League":
+                return new LeagueCrud(dgv);
+            case "Team":
+                return new TeamCrud(dgv);
+            case "Referee":
+                return new RefereeCrud(dgv);
+            default:
+                throw new ArgumentException("Invalid CRUD type");
+        }
+    }
+}
+```
+
+### 3. **Strategy Pattern** 📋
+- **Vị trí**: `GUI/Cruds/ICrud.cs` interface
+- Định nghĩa giao diện chung cho các chiến lược CRUD
+- Các class khác nhau implement ICrud với cách riêng
+
+**Ví dụ:**
+```csharp
+public interface ICrud
+{
+    void LoadData();
+    void Insert();
+    void Update();
+    void Delete();
+    void Export();
+    void Search(string searchText);
+}
+
+// Mỗi class (LeagueCrud, TeamCrud, RefereeCrud) implement ICrud
+// với logic riêng cho từng entity
+```
+
+### 4. **Singleton Pattern** 🔒
+- **Vị trí**: `BUS/Managers/DbConfigManager.cs`
+- Quản lý kết nối database duy nhất
+- Đảm bảo chỉ một instance của manager tồn tại
+
+**Ví dụ:**
+```csharp
+public static class DbConfigManager
+{
+    private static string _connStr;
+    
+    static DbConfigManager()
+    {
+        // Load và test kết nối một lần duy nhất
+        LoadAndTest();
+    }
+    
+    public static string GetConnectionString() => _connStr;
+}
+```
+
+### 5. **Data Access Object (DAO) Pattern** 🗄️
+- **Vị trí**: `DAL/*.DAL.cs`
+- Tách biệt logic truy cập dữ liệu khỏi business logic
+- Centralized CRUD operations
+
+**Ví dụ:**
+```csharp
+public class LeagueDAL
+{
+    public List<LeagueDTO> GetAllLeagues() { }
+    public LeagueDTO GetLeagueById(string id) { }
+    public bool InsertLeague(LeagueDTO league) { }
+    public bool UpdateLeague(LeagueDTO league) { }
+    public bool DeleteLeague(string id) { }
+}
+```
+
+### 6. **Data Transfer Object (DTO) Pattern** 📦
+- **Vị trí**: `DTO/*.DTO.cs`
+- Chuyển dữ liệu giữa các lớp
+- Giảm sự phụ thuộc vào các model của database
+
+**Ví dụ:**
+```csharp
+public class LeagueDTO
+{
+    public string LeagueID { get; set; }
+    public string LeagueName { get; set; }
+    public string LogoURL { get; set; }
+    public byte MaxTeams { get; set; }
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
+    public byte Status { get; set; }
+}
+```
+
+### 7. **Manager Pattern** 👔
+- **Vị trí**: `BUS/Managers/`
+- Tập trung các chức năng quản lý cụ thể
+- Xử lý logic phức tạp và orchestration
+
+**Ví dụ:**
+```csharp
+// DbConfigManager - quản lý cấu hình DB
+// MatchManager - xử lý logic tạo và quản lý trận đấu
+public class MatchManager
+{
+    public void CreateSchedule(LeagueDTO league) { }
+    public void AssignStadium(MatchDTO match, string stadiumId) { }
+    public void AssignReferee(MatchDTO match, string refereeId) { }
+}
+```
+
+### 8. **Helper/Utility Pattern** 🛠️
+- **Vị trí**: `BUS/Helpers/`, `GUI/Helpers/`
+- Chứa các hàm tiện ích và hỗ trợ
+- Tái sử dụng code chung
+
+**Ví dụ:**
+```csharp
+public class IDGenerator
+{
+    public static string GenerateID(string prefix)
+    {
+        // Tạo ID duy nhất với prefix
+        return prefix + DateTime.Now.Ticks.ToString();
+    }
+}
+```
+
+### 9. **Template Method Pattern** 📄
+- **Vị trị**: Form base classes
+- Định nghĩa cấu trúc chung cho các form
+- Các form con override các phương thức cụ thể
+
+### Lợi Ích Của Design Patterns Này
+
+| Pattern | Lợi Ích |
+|---------|---------|
+| N-Tier | Tách biệt concern, dễ bảo trì |
+| Factory | Linh hoạt tạo object, giảm coupling |
+| Strategy | Dễ mở rộng, thay thế chiến lược |
+| Singleton | Quản lý resource duy nhất |
+| DAO | Tập trung truy cập dữ liệu |
+| DTO | Rõ ràng cấu trúc dữ liệu |
+| Manager | Xử lý logic phức tạp |
+| Helper | Tái sử dụng code |
+
 ## 🚀 Các Đối Tượng Chính
 
 ### 1. **League (Giải Đấu)**
@@ -132,26 +311,14 @@ FootballScheduler/
 -- SampleData.sql - Thêm dữ liệu mẫu
 ```
 
-### 2. Cấu Hình Kết Nối Database
-
-Chỉnh sửa file `app.config` trong các project (GUI, BUS, DAL):
-
-```xml
-<connectionStrings>
-    <add name="FootballSchedulerDB" 
-         connectionString="Server=YOUR_SERVER;Database=FootballScheduler;User Id=sa;Password=YOUR_PASSWORD;" 
-         providerName="System.Data.SqlClient" />
-</connectionStrings>
-```
-
-### 3. Mở Project
+### 2. Mở Project
 
 1. Mở `FootballScheduler.sln` trong Visual Studio
 2. Restore NuGet packages
 3. Build solution (Ctrl + Shift + B)
 4. Chạy ứng dụng (F5)
 
-### 4. Đăng Nhập
+### 3. Đăng Nhập
 
 Sau khi cài dữ liệu mẫu, sử dụng thông tin đăng nhập:
 - **Username**: admin
@@ -234,15 +401,7 @@ Nếu bạn tìm thấy lỗi hoặc có đề xuất cải tiến, vui lòng:
 - Mô tả chi tiết vấn đề
 - Cung cấp các bước tái hiện lỗi
 
-## 📄 License
-
-Dự án này được phát hành dưới giấy phép **MIT License**. Xem file [LICENSE](LICENSE) để biết chi tiết.
-
-## 👨‍💻 Tác Giả
-
-Developed by the Football Scheduler Team
-
-## 🙏 Cảm Ơn
+##  Cảm Ơn
 
 - Cảm ơn các thư viện mã nguồn mở được sử dụng trong dự án
 - Cảm ơn các đóng góp từ cộng đồng
